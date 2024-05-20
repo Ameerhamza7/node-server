@@ -70,7 +70,7 @@ const extractItems = async(page)  => {
 });
 
 app.listen(port, () => {
-    console.log('Api is running on 8888');
+    console.log(`Api is running on ${port}`);
 });
 
 
