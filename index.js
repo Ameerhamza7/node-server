@@ -47,7 +47,7 @@ const extractItems = async(page)  => {
       return items;
   }
   
-  app.get('/api', async (req, res) => {
+  app.get('/', async (req, res) => {
     try {
         const browser = await puppeteer.launch({
             headless: false,
@@ -74,11 +74,10 @@ app.listen(port, () => {
 });
 
 
-//  app.get('/api', (req, res) => {
-//     const data = [];
+ app.get('/test', (req, res) => {
   
-//     res.send(data);
-//   });
+    res.send('Tets API is working');
+  });
 
 //   app.listen(8888, ()=>{
 //     console.log('Api is running on 8888');
