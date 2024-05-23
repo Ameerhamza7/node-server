@@ -1,10 +1,12 @@
 const puppeteer = require('puppeteer');
 const express = require('express');
+const bodyParser = require('body-parser');
 const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 8888
-// Allow all origins
+
 app.use(cors());
+app.use(bodyParser.json());
 
 
 
@@ -40,33 +42,37 @@ const extractItems = async(page)  => {
       while (itemTargetCount > items.length) {
           items = await extractItems(page);
           await page.evaluate(async () => {
-              await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for 2000 milliseconds (2 seconds)
+              await new Promise(resolve => setTimeout(resolve, 5000)); 
           });
           await page.evaluate(`document.querySelector("${scrollContainer}").scrollTo(0, document.querySelector("${scrollContainer}").scrollHeight)`);
       }
       return items;
   }
   
-  app.get('/', async (req, res) => {
-    try {
-        const browser = await puppeteer.launch({
-            headless: false,
-            args: ["--disabled-setuid-sandbox", "--no-sandbox"],
-        });
-        const [page] = await browser.pages();
-        await page.setExtraHTTPHeaders({
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4882.194 Safari/537.36",
-        });
-        await page.goto("https://www.google.com/maps/search/restaurants/@33.6079744,73.0180172,16z/data=!3m1!4b1?entry=ttu'", {
-            waitUntil: 'domcontentloaded',
-            timeout: 60000
-        });
-        const map = await scrollPage(page, ".m6QErb[aria-label]", 20); // Call scrollPage to populate data array
-        res.send(map); // Send data array as response
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        res.status(500).json({ error: 'Error fetching data' });
+  app.post('/', async (req, res) => {
+    const {lat, lng}=  req.body
+    if( !lat || !lng ){
+        res.status(400).json({error: 'Latitude and Longitude are required'})
     }
+        try {
+            const browser = await puppeteer.launch({
+                headless: false,
+                args: ["--disabled-setuid-sandbox", "--no-sandbox"],
+            });
+            const [page] = await browser.pages();
+            await page.setExtraHTTPHeaders({
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4882.194 Safari/537.36",
+            });
+            await page.goto(`https://www.google.com/maps/search/restaurants/@${lat},${lng},16z/data=!3m1!4b1?entry=ttu`, {
+                waitUntil: 'domcontentloaded',
+                timeout: 60000
+            });
+            const map = await scrollPage(page, ".m6QErb[aria-label]", 10); 
+            res.send(map); 
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            res.status(500).json({ error: 'Error fetching data' });
+        }
 });
 
 app.listen(port, () => {
@@ -79,6 +85,3 @@ app.listen(port, () => {
     res.send('Tets API is working');
   });
 
-//   app.listen(8888, ()=>{
-//     console.log('Api is running on 8888');
-//   })
