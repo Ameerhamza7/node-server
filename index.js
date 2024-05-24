@@ -42,7 +42,7 @@ const extractItems = async(page)  => {
       while (itemTargetCount > items.length) {
           items = await extractItems(page);
           await page.evaluate(async () => {
-              await new Promise(resolve => setTimeout(resolve, 5000)); 
+              await new Promise(resolve => setTimeout(resolve, 6000)); 
           });
           await page.evaluate(`document.querySelector("${scrollContainer}").scrollTo(0, document.querySelector("${scrollContainer}").scrollHeight)`);
       }
@@ -50,7 +50,7 @@ const extractItems = async(page)  => {
   }
   
   app.post('/', async (req, res) => {
-    const {lat, lng}=  req.body
+    const {lat, lng, search}=  req.body
     if( !lat || !lng ){
         res.status(400).json({error: 'Latitude and Longitude are required'})
     }
@@ -63,11 +63,12 @@ const extractItems = async(page)  => {
             await page.setExtraHTTPHeaders({
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4882.194 Safari/537.36",
             });
-            await page.goto(`https://www.google.com/maps/search/restaurants/@${lat},${lng},16z/data=!3m1!4b1?entry=ttu`, {
+            await page.goto(`https://www.google.com/maps/search/'${search}'/@${lat},${lng},16z/data=!3m1!4b1?entry=ttu`, {
                 waitUntil: 'domcontentloaded',
                 timeout: 60000
             });
             const map = await scrollPage(page, ".m6QErb[aria-label]", 10); 
+            // await new Promise(resolve => setTimeout(resolve, 6000)); 
             res.send(map); 
         } catch (error) {
             console.error('Error fetching data:', error);
